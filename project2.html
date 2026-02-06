@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المشروع الثاني</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; margin: 0; padding: 0; background-color: #1a1a1a; color: #f0f0f0; }
+        header { background: linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%); color: #fff; padding: 0.5rem 0; text-align: center; position: relative; min-height: 60px; }
+        .container { width: 90%; max-width: 1200px; margin: auto; padding: 2rem 0; }
+        .back-btn { position: absolute; top: 15px; right: 30px; color: #fff; text-decoration: none; font-weight: bold; background: rgba(0,0,0,0.2); padding: 5px 15px; border-radius: 20px; }
+        .back-btn:hover { background: rgba(0,0,0,0.4); }
+        
+        .content-box {
+            background: #2d2d2d;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            margin-top: 2rem;
+            border: 1px solid #444;
+        }
+        
+        h1, h2 { color: #fff; }
+        p { line-height: 1.8; color: #ccc; }
+        
+        .btn { display: inline-block; background: #8E2DE2; color: #fff; padding: 0.8rem 2rem; text-decoration: none; border-radius: 50px; margin-top: 2rem; font-weight: bold; transition: background 0.3s; }
+        .btn:hover { background: #6d1b9e; }
+
+        footer { text-align: center; padding: 2rem; margin-top: 4rem; color: #777; border-top: 1px solid #333; }
+
+        @keyframes tracking-in-expand {
+            0% { letter-spacing: -0.5em; opacity: 0; }
+            40% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        /* تنسيقات لعبة X O */
+        .xo-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 300px; margin: 20px auto; }
+        .cell { background: #444; height: 90px; display: flex; align-items: center; justify-content: center; font-size: 3rem; cursor: pointer; border-radius: 10px; font-weight: bold; transition: background 0.3s; }
+        .cell:hover { background: #505050; }
+        .cell.x { color: #ff4757; }
+        .cell.o { color: #2ed573; }
+        .controls { margin-bottom: 20px; }
+        select { padding: 8px 15px; border-radius: 20px; border: 1px solid #555; background: #333; color: #fff; font-family: 'Cairo', sans-serif; margin: 0 5px; cursor: pointer; outline: none; }
+        
+        /* تنسيقات القائمة الرئيسية للألعاب */
+        .hidden { display: none !important; }
+        .games-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-top: 20px; }
+        .game-card { background: #2d2d2d; padding: 30px 20px; border-radius: 15px; text-align: center; cursor: pointer; transition: transform 0.3s, background 0.3s; border: 1px solid #444; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .game-card:hover { transform: translateY(-10px); background: #353535; border-color: #8E2DE2; }
+        .game-icon { font-size: 4rem; margin-bottom: 15px; display: block; }
+        .back-to-menu { background: #555; color: #fff; border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer; margin-bottom: 20px; display: inline-block; }
+        .back-to-menu:hover { background: #777; }
+        .guess-input { padding: 10px; font-size: 1.2rem; width: 150px; text-align: center; border-radius: 10px; border: none; margin: 10px; outline: none; }
+        
+        /* تنسيقات لعبة الذاكرة */
+        .memory-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 400px; margin: 20px auto; perspective: 1000px; }
+        .memory-card { width: 100%; height: 90px; position: relative; transform-style: preserve-3d; transition: transform 0.6s; cursor: pointer; }
+        .memory-card.is-flipped { transform: rotateY(180deg); }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; border-radius: 10px; }
+        .card-front { background: #555; }
+        .card-back { background: #8E2DE2; transform: rotateY(180deg); font-size: 2.5rem; }
+        .memory-card.is-matched { transform: rotateY(180deg); opacity: 0.5; cursor: default; }
+        
+        /* تنسيقات لعبة حجر ورقة مقص */
+        .rps-choices { display: flex; justify-content: center; gap: 20px; margin: 30px 0; }
+        .rps-btn { font-size: 3rem; background: #444; border: 2px solid #555; border-radius: 50%; width: 100px; height: 100px; cursor: pointer; transition: transform 0.2s, background 0.3s; display: flex; align-items: center; justify-content: center; }
+        .rps-btn:hover { transform: scale(1.1); background: #555; border-color: #8E2DE2; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="back-btn">🏠 الرئيسية</a>
+        <h1 style="position: absolute; top: 5px; left: 30px; font-size: 3rem; margin: 0; animation: tracking-in-expand 1.5s cubic-bezier(0.215, 0.610, 0.355, 1.000) both;">GAME</h1>
+    </header>
+
+    <!-- القائمة الرئيسية للألعاب -->
+    <div class="container" id="main-menu">
+        <div class="content-box" style="text-align: center;">
+            <h2> الألعاب</h2>
+            <p>اختر اللعبة التي تريد البدء بها</p>
+            
+            <div class="games-grid">
+                <div class="game-card" onclick="showGame('xo')">
+                    <span class="game-icon">❌⭕</span>
+                    <h3>تيك تاك تو</h3>
+                    <p>تحدى الكمبيوتر أو صديقك</p>
+                </div>
+                <div class="game-card" onclick="showGame('reaction')">
+                    <span class="game-icon">⚡</span>
+                    <h3>سرعة رد الفعل</h3>
+                    <p>اختبر سرعتك في الضغط</p>
+                </div>
+                <div class="game-card" onclick="showGame('guess')">
+                    <span class="game-icon">🔢</span>
+                    <h3>تخمين الرقم</h3>
+                    <p>خمن الرقم بين 1 و 100</p>
+                </div>
+                <div class="game-card" onclick="showGame('memory')">
+                    <span class="game-icon">🧠</span>
+                    <h3>لعبة الذاكرة</h3>
+                    <p>طابق البطاقات المتشابهة</p>
+                </div>
+                <div class="game-card" onclick="showGame('rps')">
+                    <span class="game-icon">✊✋✌️</span>
+                    <h3>حجر ورقة مقص</h3>
+                    <p>تحدى الكمبيوتر</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- قسم لعبة X O -->
+    <div class="container hidden" id="game-xo">
+        <div class="content-box">
+            <button class="back-to-menu" onclick="showMenu()">🔙 العودة للقائمة</button>
+            <h2>لعبة تيك تاك تو (X O)</h2>
+            
+            <div class="controls">
+                <select id="mode-select" onchange="updateGameSettings()">
+                    <option value="computer">ضد الكمبيوتر 🤖</option>
+                    <option value="friend">ضد صديق 👤</option>
+                </select>
+                <select id="difficulty-select" onchange="updateGameSettings()">
+                    <option value="easy">سهل 👶</option>
+                    <option value="medium">متوسط 😐</option>
+                    <option value="hard" selected>صعب 🔥</option>
+                </select>
+            </div>
+
+            <p>
+                <span id="status" style="color: #ff4757; font-weight: bold;">دورك (X)</span>
+            </p>
+            
+            <!-- رقعة اللعبة -->
+            <div class="xo-board" id="board">
+                <div class="cell" onclick="makeMove(0)"></div>
+                <div class="cell" onclick="makeMove(1)"></div>
+                <div class="cell" onclick="makeMove(2)"></div>
+                <div class="cell" onclick="makeMove(3)"></div>
+                <div class="cell" onclick="makeMove(4)"></div>
+                <div class="cell" onclick="makeMove(5)"></div>
+                <div class="cell" onclick="makeMove(6)"></div>
+                <div class="cell" onclick="makeMove(7)"></div>
+                <div class="cell" onclick="makeMove(8)"></div>
+            </div>
+
+            <button class="btn" onclick="resetGame()">لعبة جديدة</button>
+        </div>
+    </div>
+
+    <!-- قسم لعبة سرعة رد الفعل -->
+    <div class="container hidden" id="game-reaction">
+        <div class="content-box">
+            <button class="back-to-menu" onclick="showMenu()">🔙 العودة للقائمة</button>
+            <h2>⚡ اختبار سرعة رد الفعل</h2>
+            <p>اضغط على المربع عندما يتحول لونه إلى الأخضر بأسرع ما يمكن!</p>
+            <div id="reaction-box" style="width: 100%; height: 200px; background: #8E2DE2; color: white; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; cursor: pointer; border-radius: 10px; margin: 20px 0; font-weight: bold;" onclick="handleReactionClick()">اضغط للبدء</div>
+            <p id="reaction-result" style="font-weight: bold; font-size: 1.2rem; min-height: 30px;"></p>
+        </div>
+    </div>
+
+    <!-- قسم لعبة تخمين الرقم -->
+    <div class="container hidden" id="game-guess">
+        <div class="content-box">
+            <button class="back-to-menu" onclick="showMenu()">🔙 العودة للقائمة</button>
+            <h2>🔢 لعبة تخمين الرقم</h2>
+            
+            <div class="controls">
+                <select id="guess-difficulty" onchange="startGuessGame()">
+                    <option value="easy">سهل (20 محاولة) 😌</option>
+                    <option value="medium" selected>متوسط (10 محاولات) 😐</option>
+                    <option value="hard">صعب (5 محاولات) 🔥</option>
+                </select>
+            </div>
+
+            <p>لقد اخترت رقماً بين 1 و 100.<br>المحاولات المتبقية: <span id="attempts-display" style="color: #f1c40f; font-weight: bold;">10</span></p>
+            
+            <input type="number" id="guess-input" class="guess-input" placeholder="??">
+            <button class="btn" onclick="checkGuess()" style="margin-top: 0;">تخمين</button>
+            
+            <p id="guess-result" style="font-weight: bold; font-size: 1.2rem; margin-top: 20px; min-height: 30px;"></p>
+            <button class="btn" onclick="startGuessGame()" style="background: #555; font-size: 0.9rem;">إعادة اللعبة</button>
+        </div>
+    </div>
+
+    <!-- قسم لعبة الذاكرة -->
+    <div class="container hidden" id="game-memory">
+        <div class="content-box">
+            <button class="back-to-menu" onclick="showMenu()">🔙 العودة للقائمة</button>
+            <h2>🧠 لعبة الذاكرة</h2>
+            <button class="btn" onclick="startMemoryGame()" style="margin-bottom: 20px; background: #27ae60;">ابدأ اللعبة 🏁</button>
+            <p>اعثر على كل زوج من البطاقات المتشابهة. عدد الحركات: <span id="moves-counter" style="color: #f1c40f; font-weight: bold;">0</span> | الوقت: <span id="timer" style="color: #2ecc71; font-weight: bold;">00:00</span></p>
+            <div class="memory-board" id="memory-board">
+                <!-- Cards will be generated by JS -->
+            </div>
+            <button class="btn" onclick="startMemoryGame()" style="margin-top: 20px;">إعادة اللعبة</button>
+        </div>
+    </div>
+
+    <!-- قسم لعبة حجر ورقة مقص -->
+    <div class="container hidden" id="game-rps">
+        <div class="content-box">
+            <button class="back-to-menu" onclick="showMenu()">🔙 العودة للقائمة</button>
+            <h2>✊✋✌️ حجر ورقة مقص</h2>
+            <div class="controls">
+                <label style="color: #ccc;">الفائز من: </label>
+                <select id="rps-target" onchange="resetRPSGame()">
+                    <option value="3">3 نقاط</option>
+                    <option value="5" selected>5 نقاط</option>
+                    <option value="10">10 نقاط</option>
+                </select>
+            </div>
+            <p>اختر حركتك لمواجهة الكمبيوتر:</p>
+            <div class="rps-choices">
+                <button class="rps-btn" onclick="playRPS('rock')">✊</button>
+                <button class="rps-btn" onclick="playRPS('paper')">✋</button>
+                <button class="rps-btn" onclick="playRPS('scissors')">✌️</button>
+            </div>
+            <div id="rps-result" style="margin-top: 20px; font-size: 1.2rem; font-weight: bold; min-height: 60px;"></div>
+            <p id="rps-score" style="margin-top: 10px; color: #ccc;">النتيجة: أنت 0 - 0 الكمبيوتر</p>
+            <button class="btn" onclick="resetRPSGame()" style="background: #555; font-size: 0.9rem; margin-top: 15px;">إعادة تصفير النتيجة</button>
+        </div>
+    </div>
+
+    <footer>
+    </footer>
+
+    <script>
+        let currentPlayer = 'X';
+        let boardState = ["", "", "", "", "", "", "", "", ""];
+        let gameActive = true;
+        let gameMode = 'computer';
+        let difficulty = 'hard';
+        let timerInterval;
+        const statusDisplay = document.getElementById('status');
+
+        const winningConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // صفوف
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // أعمدة
+            [0, 4, 8], [2, 4, 6]             // أقطار
+        ];
+
+        // وظائف التنقل بين القوائم
+        function showGame(gameId) {
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('game-xo').classList.add('hidden');
+            document.getElementById('game-reaction').classList.add('hidden');
+            document.getElementById('game-guess').classList.add('hidden');
+            document.getElementById('game-memory').classList.add('hidden');
+            document.getElementById('game-rps').classList.add('hidden');
+            
+            document.getElementById('game-' + gameId).classList.remove('hidden');
+            if(gameId === 'guess') startGuessGame();
+            if(gameId === 'memory') {
+                document.getElementById('memory-board').innerHTML = '';
+                document.getElementById('moves-counter').innerText = '0';
+                document.getElementById('timer').innerText = '00:40';
+                clearInterval(timerInterval);
+            }
+        }
+
+        function showMenu() {
+            document.getElementById('main-menu').classList.remove('hidden');
+            document.getElementById('game-xo').classList.add('hidden');
+            document.getElementById('game-reaction').classList.add('hidden');
+            document.getElementById('game-guess').classList.add('hidden');
+            document.getElementById('game-memory').classList.add('hidden');
+            document.getElementById('game-rps').classList.add('hidden');
+            clearInterval(timerInterval);
+            resetGame(); // إعادة تعيين XO عند الخروج
+        }
+
+        function updateGameSettings() {
+            gameMode = document.getElementById('mode-select').value;
+            difficulty = document.getElementById('difficulty-select').value;
+            
+            const diffSelect = document.getElementById('difficulty-select');
+            diffSelect.style.display = (gameMode === 'friend') ? 'none' : 'inline-block';
+            
+            resetGame();
+        }
+
+        function makeMove(index) {
+            if (boardState[index] !== "" || !gameActive) return;
+            if (gameMode === 'computer' && currentPlayer !== 'X') return;
+
+            boardState[index] = currentPlayer;
+            const cell = document.getElementsByClassName('cell')[index];
+            cell.innerText = currentPlayer;
+            cell.classList.add(currentPlayer.toLowerCase());
+
+            checkResult();
+        }
+
+        function computerMove() {
+             if (!gameActive) return;
+
+            let bestMove = -1;
+            
+            // استراتيجيات الذكاء الاصطناعي حسب الصعوبة
+
+            // المستوى المتوسط والصعب: محاولة الفوز أو الصد
+            if (difficulty !== 'easy') {
+                // 1. الهجوم (الفوز)
+                for (const condition of winningConditions) {
+                    const [a, b, c] = condition;
+                    if (boardState[a] === 'O' && boardState[b] === 'O' && boardState[c] === '') { bestMove = c; break; }
+                    if (boardState[a] === 'O' && boardState[c] === 'O' && boardState[b] === '') { bestMove = b; break; }
+                    if (boardState[b] === 'O' && boardState[c] === 'O' && boardState[a] === '') { bestMove = a; break; }
+                }
+
+                // 2. الدفاع (الصد)
+                if (bestMove === -1) {
+                    for (const condition of winningConditions) {
+                        const [a, b, c] = condition;
+                        if (boardState[a] === 'X' && boardState[b] === 'X' && boardState[c] === '') { bestMove = c; break; }
+                        if (boardState[a] === 'X' && boardState[c] === 'X' && boardState[b] === '') { bestMove = b; break; }
+                        if (boardState[b] === 'X' && boardState[c] === 'X' && boardState[a] === '') { bestMove = a; break; }
+                    }
+                }
+            }
+
+            // المستوى الصعب فقط: استراتيجيات التمركز
+            if (difficulty === 'hard') {
+                // 3. السيطرة على المنتصف
+                if (bestMove === -1 && boardState[4] === '') bestMove = 4;
+                
+                // 4. الزوايا
+                if (bestMove === -1) {
+                    const corners = [0, 2, 6, 8].filter(index => boardState[index] === '');
+                    if (corners.length > 0) bestMove = corners[Math.floor(Math.random() * corners.length)];
+                }
+            }
+
+            // 5. حركة عشوائية (للمستوى السهل أو كخيار أخير)
+            if (bestMove === -1) {
+                const availableMoves = boardState.map((val, idx) => val === "" ? idx : null).filter(val => val !== null);
+                if (availableMoves.length > 0) bestMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+            }
+
+            if (bestMove !== -1) {
+                boardState[bestMove] = currentPlayer; // currentPlayer is 'O'
+                const cell = document.getElementsByClassName('cell')[bestMove];
+                cell.innerText = currentPlayer;
+                cell.classList.add('o');
+                checkResult();
+            }
+        }
+
+        function checkResult() {
+            let roundWon = false;
+            for (let i = 0; i < winningConditions.length; i++) {
+                const [a, b, c] = winningConditions[i];
+                if (boardState[a] && boardState[a] === boardState[b] && boardState[a] === boardState[c]) {
+                    roundWon = true;
+                    break;
+                }
+            }
+
+            if (roundWon) {
+                if (gameMode === 'computer') {
+                    statusDisplay.innerText = currentPlayer === 'X' ? "أنت فزت! 🎉" : "الكمبيوتر فاز! 🤖";
+                } else {
+                    statusDisplay.innerText = `اللاعب ${currentPlayer} فاز! 🎉`;
+                }
+                gameActive = false;
+                return;
+            }
+
+            if (!boardState.includes("")) {
+                statusDisplay.innerText = "تعادل! 🤝";
+                gameActive = false;
+                return;
+            }
+
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
+            
+            if (gameMode === 'computer') {
+                if (currentPlayer === "O") {
+                    statusDisplay.innerText = "الكمبيوتر يفكر... 🤔";
+                    statusDisplay.style.color = "#2ed573";
+                    setTimeout(computerMove, 700);
+                } else {
+                    statusDisplay.innerText = "دورك (X)";
+                    statusDisplay.style.color = "#ff4757";
+                }
+            } else {
+                statusDisplay.innerText = `دور اللاعب (${currentPlayer})`;
+                statusDisplay.style.color = currentPlayer === "X" ? "#ff4757" : "#2ed573";
+            }
+        }
+
+        function resetGame() {
+            currentPlayer = 'X';
+            boardState = ["", "", "", "", "", "", "", "", ""];
+            gameActive = true;
+            statusDisplay.innerText = (gameMode === 'computer') ? "دورك (X)" : "دور اللاعب (X)";
+            statusDisplay.style.color = "#ff4757";
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.innerText = "";
+                cell.classList.remove('x', 'o');
+            });
+        }
+
+        // منطق لعبة سرعة رد الفعل
+        let reactionStartTime, reactionEndTime;
+        let reactionActive = false;
+        const reactionBox = document.getElementById('reaction-box');
+        const reactionResult = document.getElementById('reaction-result');
+
+        function handleReactionClick() {
+            if (!reactionActive) {
+                reactionActive = true;
+                reactionBox.style.backgroundColor = "#e74c3c"; // أحمر
+                reactionBox.innerText = "انتظر اللون الأخضر...";
+                reactionResult.innerText = "";
+                
+                const randomTime = Math.floor(Math.random() * 2000) + 1000;
+                setTimeout(() => {
+                    if(reactionActive) {
+                        reactionBox.style.backgroundColor = "#2ecc71"; // أخضر
+                        reactionBox.innerText = "اضغط الآن!";
+                        reactionStartTime = new Date().getTime();
+                        reactionBox.setAttribute('data-ready', 'true');
+                    }
+                }, randomTime);
+            } else {
+                if (reactionBox.getAttribute('data-ready') === 'true') {
+                    reactionEndTime = new Date().getTime();
+                    const timeTaken = reactionEndTime - reactionStartTime;
+                    reactionResult.innerText = `وقتك هو: ${timeTaken} ميلي ثانية! 🚀`;
+                    reactionResult.style.color = "#2ecc71";
+                    reactionActive = false;
+                    reactionBox.removeAttribute('data-ready');
+                    reactionBox.style.backgroundColor = "#8E2DE2";
+                    setTimeout(() => reactionBox.innerText = "اضغط للبدء من جديد", 1500);
+                } else {
+                    reactionResult.innerText = "استعجلت! حاول مرة أخرى.";
+                    reactionResult.style.color = "#e74c3c";
+                    reactionActive = false;
+                    reactionBox.style.backgroundColor = "#8E2DE2";
+                    reactionBox.innerText = "اضغط للبدء من جديد";
+                }
+            }
+        }
+
+        // منطق لعبة تخمين الرقم
+        let targetNumber;
+        let maxAttempts = 10;
+        let remainingAttempts = 10;
+
+        function startGuessGame() {
+            const diff = document.getElementById('guess-difficulty').value;
+            if (diff === 'easy') maxAttempts = 20;
+            else if (diff === 'medium') maxAttempts = 10;
+            else maxAttempts = 5;
+
+            remainingAttempts = maxAttempts;
+            targetNumber = Math.floor(Math.random() * 100) + 1;
+            
+            document.getElementById('attempts-display').innerText = remainingAttempts;
+            document.getElementById('guess-result').innerText = "";
+            document.getElementById('guess-result').style.color = "#fff";
+            document.getElementById('guess-input').value = "";
+            document.getElementById('guess-input').disabled = false;
+        }
+
+        function checkGuess() {
+            const userGuess = parseInt(document.getElementById('guess-input').value);
+            const inputField = document.getElementById('guess-input');
+            const resultDisplay = document.getElementById('guess-result');
+            
+            if (isNaN(userGuess)) {
+                resultDisplay.innerText = "الرجاء إدخال رقم صحيح!";
+                resultDisplay.style.color = "#e74c3c";
+                return;
+            }
+
+            remainingAttempts--;
+            document.getElementById('attempts-display').innerText = remainingAttempts;
+
+            if (userGuess === targetNumber) {
+                resultDisplay.innerText = `🎉 صحيح! الرقم هو ${targetNumber}.`;
+                resultDisplay.style.color = "#2ecc71";
+                inputField.disabled = true;
+            } else if (remainingAttempts <= 0) {
+                resultDisplay.innerText = `❌ انتهت المحاولات! الرقم كان ${targetNumber}.`;
+                resultDisplay.style.color = "#e74c3c";
+                inputField.disabled = true;
+            } else if (userGuess < targetNumber) {
+                resultDisplay.innerText = "📉 الرقم أكبر! حاول مرة أخرى.";
+                resultDisplay.style.color = "#f1c40f";
+            } else {
+                resultDisplay.innerText = "📈 الرقم أصغر! حاول مرة أخرى.";
+                resultDisplay.style.color = "#f1c40f";
+            }
+        }
+
+        // منطق لعبة الذاكرة
+        const memoryBoard = document.getElementById('memory-board');
+        const movesCounter = document.getElementById('moves-counter');
+        const timerDisplay = document.getElementById('timer');
+        let hasFlippedCard = false;
+        let lockBoard = false;
+        let firstCard, secondCard;
+        let moves = 0;
+        let timeLeft = 60;
+        let matchedPairs = 0;
+
+        function startMemoryGame() {
+            const emojis = ['🍕', '🍕', '🚀', '🚀', '⭐', '⭐', '🤖', '🤖', '💡', '💡', '🎉', '🎉'];
+            emojis.sort(() => 0.5 - Math.random()); // Shuffle
+
+            memoryBoard.innerHTML = '';
+            moves = 0;
+            movesCounter.innerText = moves;
+            lockBoard = false;
+            hasFlippedCard = false;
+            
+            clearInterval(timerInterval);
+            timeLeft = 40; // زمن اللعبة 40 ثانية
+            matchedPairs = 0;
+            timerDisplay.innerText = "00:40";
+            timerDisplay.style.color = "#2ecc71";
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+                const seconds = (timeLeft % 60).toString().padStart(2, '0');
+                timerDisplay.innerText = `${minutes}:${seconds}`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerDisplay.innerText = "انتهى الوقت!";
+                    timerDisplay.style.color = "#e74c3c";
+                    lockBoard = true; // إيقاف اللعب
+                }
+            }, 1000);
+
+            emojis.forEach(emoji => {
+                const card = document.createElement('div');
+                card.classList.add('memory-card');
+                card.dataset.emoji = emoji;
+
+                card.innerHTML = `
+                    <div class="card-face card-front"></div>
+                    <div class="card-face card-back">${emoji}</div>
+                `;
+                card.addEventListener('click', flipCard);
+                memoryBoard.appendChild(card);
+            });
+        }
+
+        function flipCard() {
+            if (lockBoard) return;
+            if (this === firstCard) return;
+
+            this.classList.add('is-flipped');
+
+            if (!hasFlippedCard) {
+                hasFlippedCard = true;
+                firstCard = this;
+                return;
+            }
+
+            secondCard = this;
+            moves++;
+            movesCounter.innerText = moves;
+
+            let isMatch = firstCard.dataset.emoji === secondCard.dataset.emoji;
+            isMatch ? disableCards() : unflipCards();
+        }
+
+        function disableCards() {
+            firstCard.removeEventListener('click', flipCard);
+            secondCard.removeEventListener('click', flipCard);
+            firstCard.classList.add('is-matched');
+            secondCard.classList.add('is-matched');
+            
+            matchedPairs++;
+            if (matchedPairs === 6) {
+                clearInterval(timerInterval);
+                timerDisplay.innerText = "مبروك لقد فزت! 🎉";
+            }
+            resetBoardState();
+        }
+
+        function unflipCards() {
+            lockBoard = true;
+            setTimeout(() => {
+                firstCard.classList.remove('is-flipped');
+                secondCard.classList.remove('is-flipped');
+                resetBoardState();
+            }, 1200);
+        }
+
+        function resetBoardState() {
+            [hasFlippedCard, lockBoard] = [false, false];
+            [firstCard, secondCard] = [null, null];
+        }
+
+        // منطق لعبة حجر ورقة مقص
+        let rpsPlayerScore = 0;
+        let rpsComputerScore = 0;
+
+        function playRPS(playerChoice) {
+            const targetScore = parseInt(document.getElementById('rps-target').value);
+            if (rpsPlayerScore >= targetScore || rpsComputerScore >= targetScore) return;
+
+            const choices = ['rock', 'paper', 'scissors'];
+            const emojis = { rock: '✊', paper: '✋', scissors: '✌️' };
+            
+            const computerChoice = choices[Math.floor(Math.random() * 3)];
+            
+            let result = '';
+            let color = '';
+
+            if (playerChoice === computerChoice) {
+                result = "تعادل! 🤝";
+                color = '#f1c40f';
+            } else if (
+                (playerChoice === 'rock' && computerChoice === 'scissors') ||
+                (playerChoice === 'paper' && computerChoice === 'rock') ||
+                (playerChoice === 'scissors' && computerChoice === 'paper')
+            ) {
+                result = "فزت! 🎉";
+                color = '#2ecc71';
+                rpsPlayerScore++;
+            } else {
+                result = "خسرت! 😢";
+                color = '#e74c3c';
+                rpsComputerScore++;
+            }
+
+            const resultDiv = document.getElementById('rps-result');
+            resultDiv.innerHTML = `<div style="margin-bottom: 10px;">أنت: ${emojis[playerChoice]}  VS  الكمبيوتر: ${emojis[computerChoice]}</div><div style="color: ${color}; font-size: 1.5rem;">${result}</div>`;
+            
+            document.getElementById('rps-score').innerText = `النتيجة: أنت ${rpsPlayerScore} - ${rpsComputerScore} الكمبيوتر`;
+
+            if (rpsPlayerScore >= targetScore) {
+                resultDiv.innerHTML += `<br><span style="color: #2ecc71; font-weight: bold; font-size: 1.2rem;">🏆 مبروك! لقد فزت بالمباراة!</span>`;
+            } else if (rpsComputerScore >= targetScore) {
+                resultDiv.innerHTML += `<br><span style="color: #e74c3c; font-weight: bold; font-size: 1.2rem;">💀 انتهت المباراة! فاز الكمبيوتر.</span>`;
+            }
+        }
+
+        function resetRPSGame() {
+            rpsPlayerScore = 0;
+            rpsComputerScore = 0;
+            document.getElementById('rps-score').innerText = "النتيجة: أنت 0 - 0 الكمبيوتر";
+            document.getElementById('rps-result').innerHTML = "";
+        }
+    </script>
+</body>
+</html>
